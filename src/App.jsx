@@ -7,7 +7,7 @@ import TokenVestingApp from './views/TokenVestingApp'
 const App = () => (
   <Router>
     <Switch>
-      <Route path="/:address/:token" component={ Main }/>
+      <Route path="/:address/:token/:holder" component={ Main }/>
       <Route component={ MissingAddress } />
     </Switch>
   </Router>
@@ -15,11 +15,11 @@ const App = () => (
 
 const Main = function({ match }) {
   let web3 = new Web3()
-  let { address, token } = match.params
+  let { address, token, holder } = match.params
 
   // TODO validate TokenVesting address
   return web3.utils.isAddress(address)
-    ? <TokenVestingApp address={ address } token={ token } />
+    ? <TokenVestingApp address={ address } token={ token } holder={holder}/>
     : <MissingAddress />
 }
 
