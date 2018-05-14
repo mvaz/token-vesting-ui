@@ -28,6 +28,8 @@ class VestingDetails extends Component {
   }
 
   render() {
+
+    console.log("details", this.props.details)
     const { start, cliff, end, total, released, vested, revocable, beneficiary } = this.props.details
     const releasable = vested ? vested - released : null
 

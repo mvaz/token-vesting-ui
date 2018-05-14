@@ -3,50 +3,65 @@ import { Line } from 'react-chartjs-2'
 import moment from 'moment'
 
 import { displayAmount } from '../utils'
+import { getVestedAmountAt } from '../contracts'
+
+import Promise  from 'bluebird'
 
 class VestingChart extends Component {
+
+  componentWillMount() {
+    this.setState({'points': []})
+    this.getPoints().then( (p) => {
+      this.setState({'points': p})
+    })
+  }
+
   render() {
-    return <Line data={ this.chartData() } options={ this.chartOptions() } />
+    const chartData = this.chartData()
+    console.log("chartData", chartData)
+    return <Line data={ chartData } options={ this.chartOptions() } />
   }
 
   chartData() {
     return {
       datasets: [
         this.fromBaseDataset({
-          data: this.getPoints()
+          data: this.state.points
         }),
       ],
     }
   }
 
   getPoints() {
+    console.log("VestingChart.getPoints", this.props)
     const { start, cliff, end } = this.props.details
-    const now = new Date() / 1000 // normalize to seconds
+    const startDate = new Date(start * 1000);
+    const endDate = new Date(end * 1000);
+    // const now = new Date() / 1000 // normalize to seconds
 
-    const points = [ this.getDataPointAt(start) ]
+    console.log(":", start, end)
+    console.log("::", startDate, endDate)
 
-    // Add signitificant datapoints. Order matters.
-    if (cliff < now) {
-      points.push(this.getDataPointAt(cliff))
+    // var now = new Date();
+    var days = [];
+    for (var d = startDate; d <= endDate; d.setDate(d.getDate() + 7)) {
+      days.push(new Date(d) / 1000);
     }
 
-    if (start < now && now < end) {
-      points.push(this.getDataPointAt(now))
-    }
+    const _vesting_address = this.props.address;
+    const _holder = this.props.holder;
 
-    if (cliff > now) {
-      points.push(this.getDataPointAt(cliff))
-    }
+    console.log("days", days)
 
-    points.push(this.getDataPointAt(end))
-
-    return points
+    return Promise.map(days, (d) => { 
+      return this.getDataPointAt(_vesting_address, _holder, d)
+    }, {concurrency: 50})
   }
 
-  getDataPointAt(date) {
+  async getDataPointAt(address, holder, date) {
     return {
       x: this.formatDate(date),
-      y: this.getAmountAt(date)
+      y: address === "0x0" ? -1 : await getVestedAmountAt(address, holder, date)
     }
   }
 

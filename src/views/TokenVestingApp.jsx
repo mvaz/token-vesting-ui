@@ -18,7 +18,9 @@ class TokenVestingApp extends Component {
   }
 
   componentDidMount() {
-    this.getData()
+    this.getData().then((s) => {
+      this.setState(s)
+    })
   }
 
   render() {
@@ -33,7 +35,7 @@ class TokenVestingApp extends Component {
 
         <Grid>
           <Row>
-            <Col xs={12} md={6}>
+            <Col xs={12} md={3}>
               <VestingDetails
                 address={ address }
                 token={ token }
@@ -43,8 +45,9 @@ class TokenVestingApp extends Component {
                 setLoader={ x => this.setLoader(x) }
               />
             </Col>
-
-            <Col xs={12} md={6}>
+          </Row>
+          <Row>
+            <Col xs={12} md={9}>
               <VestingSchedule
                 details={ this.state }
                 address={ address }
@@ -67,31 +70,36 @@ class TokenVestingApp extends Component {
     const tokenContract = await getSimpleToken(token)
 
     const grant = await tokenVesting.grants(holder);
+    console.log("grant", grant)
 
     const start = grant[1]
     const end = grant[3]
 
     const balance  = await tokenContract.balanceOf(address)
+    const decimals = await tokenContract.DECIMALS()
+    const owner = await tokenVesting.owner()
     // const released = await tokenVesting.released(token)
     const total = grant[0] // balance.plus(released)
     const released = grant[5]
+    const name = await tokenContract.NAME()
+    const symbol = await tokenContract.SYMBOL()
 
-    this.setState({
-      start,
-      end,
-      cliff: grant[2], //await tokenVesting.cliff(),
-      total,
-      released,
-      vested: grant[0], //await tokenVesting.vestedAmount(token),
-      decimals: await tokenContract.DECIMALS(),
+    return {
+      start: start,
+      end: end,
+      cliff: grant[2],
+      total: total,
+      released: released,
+      vested: grant[0],
+      decimals: decimals,
       beneficiary: holder,
-      owner: await tokenVesting.owner(),
+      owner: owner,
       revocable: grant[6],
       revoked: false,
-      name: await tokenContract.NAME(),
-      symbol: await tokenContract.SYMBOL(),
+      name: name,
+      symbol: symbol,
       loading: false
-    })
+    }
   }
 }
 

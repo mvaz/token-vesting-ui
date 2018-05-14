@@ -14,3 +14,11 @@ export async function getSimpleToken(address) {
   SimpleToken.setProvider(provider)
   return SimpleToken.at(address)
 }
+
+export async function getVestedAmountAt(address, holder, date) {
+  console.log("getVestedAmountAt", address)
+  const vesting = await getTokenVesting(address)
+  const amount = await vesting.vestedTokens(holder, date)
+  return amount; 
+}
+
